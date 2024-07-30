@@ -1,0 +1,110 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - wordpress
+      - joomla
+      - typo3
+      - prestashop
+      - spip
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - wordpress_data:/var/www/html/wordpress
+      - wordpress_uploads:/var/www/html/wordpress/wp-content/uploads
+    depends_on:
+      - db
+
+  joomla:
+    image: joomla:latest
+    container_name: joomla
+    environment:
+      JOOMLA_DB_HOST: db:3306
+      JOOMLA_DB_NAME: ${JOOMLA_DB_NAME}
+      JOOMLA_DB_USER: ${DB_USER}
+      JOOMLA_DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - joomla_data:/var/www/html/joomla
+      - joomla_uploads:/var/www/html/joomla/images
+    depends_on:
+      - db
+
+  typo3:
+    image: martinhelmich/typo3:latest
+    container_name: typo3
+    environment:
+      TYPO3_DB_HOST: db:3306
+      TYPO3_DB_NAME: ${TYPO3_DB_NAME}
+      TYPO3_DB_USER: ${DB_USER}
+      TYPO3_DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - typo3_data:/var/www/html/typo3
+    depends_on:
+      - db
+
+  prestashop:
+    image: prestashop/prestashop:latest
+    container_name: prestashop
+    environment:
+      DB_SERVER: db:3306
+      DB_NAME: ${PRESTASHOP_DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - prestashop_data:/var/www/html/prestashop
+    depends_on:
+      - db
+
+  spip:
+    image: ipeos/spip:latest
+    container_name: spip
+    environment:
+      SPIP_AUTO_INSTALL: 1
+      SPIP_DB_HOST: db
+      SPIP_DB_SERVER: mysql
+      SPIP_DB_LOGIN: ${DB_USER}
+      SPIP_DB_PASS: ${DB_PASSWORD}
+      SPIP_DB_NAME: ${SPIP_DB_NAME}
+      SPIP_ADMIN_NAME: ${SPIP_ADMIN_NAME}
+      SPIP_ADMIN_LOGIN: ${SPIP_ADMIN_LOGIN}
+      SPIP_ADMIN_EMAIL: ${SPIP_ADMIN_EMAIL}
+      SPIP_ADMIN_PASS: ${SPIP_ADMIN_PASS}
+    volumes:
+      - spip_data:/var/www/html/spip
+    depends_on:
+      - db
+
+  db:
+    image: mysql:latest
+    restart: always
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ${DEFAULT_DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init/initdb.sh:/docker-entrypoint-initdb.d/initdb.sh:ro
+
+volumes:
+  wordpress_data:
+  wordpress_uploads:
+  joomla_data:
+  joomla_uploads:
+  typo3_data:
+  prestashop_data:
+  spip_data:
+  db_data:
